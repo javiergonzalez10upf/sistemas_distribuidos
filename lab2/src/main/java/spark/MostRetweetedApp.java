@@ -62,7 +62,7 @@ public class MostRetweetedApp {
         //        );
 
         // Save the results
-        //mostRetweetedTweets.saveAsTextFile(output);
+        topTweets.saveAsTextFile(output);
         topTweets.foreach(tweet -> System.out.println("Tweet: " + tweet));
         sc.stop();
 
