@@ -24,7 +24,7 @@ public class MostRetweetedApp {
         String input = args[1];
 
         // Spark application logic here...
-        SparkConf conf = new SparkConf().setAppName("BiGramsApp");
+        SparkConf conf = new SparkConf().setAppName("MostRetweetedApp");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         // Read input and create an RDD of ExtendedSimplifiedTweet
