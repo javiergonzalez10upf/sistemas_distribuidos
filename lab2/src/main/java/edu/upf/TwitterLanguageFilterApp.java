@@ -18,18 +18,19 @@ public class TwitterLanguageFilterApp {
 
         long start = System.currentTimeMillis();
 
-        // Verificar la cantidad correcta de argumentos
+        // verify if the arguments are ok
         if (args.length < 3) {
             System.err.println("Usage: TwitterLanguageFilterApp <language> <outputFile> <inputFile1> <inputFile2> ...");
             System.exit(1);
         }
 
-        // Argumentos de línea de comandos
+        // Obtain args
         String language = args[0];
         String outputFile = args[1];
-        List<String> inputFilesList = Arrays.asList(Arrays.copyOfRange(args, 3, args.length));
+        List<String> inputFilesList = Arrays.asList(Arrays.copyOfRange(args, 2, args.length));
 
         String inputFiles = String.join(",", inputFilesList);
+        //"path1, path2, path3,..."
 
         // Configuración de Spark
         SparkConf conf = new SparkConf().setAppName("TwitterLanguageFilterApp").setMaster("local[*]");
