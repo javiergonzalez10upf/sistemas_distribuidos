@@ -7,9 +7,11 @@ import org.apache.spark.SparkConf;
 import edu.upf.filter.FileLanguageFilter;
 import software.amazon.awssdk.regions.Region;
 //import edu.upf.uploader.SparkS3Uploader;
+import edu.upf.model.SimplifiedTweet;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+
+
 
 import static edu.upf.filter.FileLanguageFilter.filterLanguage;
 
@@ -41,10 +43,19 @@ public class TwitterLanguageFilterApp {
         JavaRDD<String> RDDallLines_spaces = sc.textFile(inputFiles);
         JavaRDD<String> RDDallLines = RDDallLines_spaces.filter(line -> !line.isEmpty());
 
-        JavaRDD<String> allLines = filterLanguage(RDDallLines, language);
+        //to filter language
+
+        JavaRDD<String> allLines = RDDallLines.filter(line -> {
+            Optional<SimplifiedTweet> optionalTweet = SimplifiedTweet.fromJson(line);
+            return optionalTweet.isPresent() && optionalTweet.get().getLanguage().equalsIgnoreCase(language);
+        });
+
+        //JavaRDD<String> allLines = filterLanguage(RDDallLines, language);
+
+
 
         // Guardar el resultado en un único archivo local
-        allLines.coalesce(1).saveAsTextFile(outputFile);
+        allLines.saveAsTextFile(outputFile);
 
         // Subir el resultado a S3
         //final S3Uploader uploader = new S3Uploader(bucket, language, Region.US_EAST_1);

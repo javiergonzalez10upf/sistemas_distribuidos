@@ -17,20 +17,24 @@ import java.util.stream.Collectors;
 import static edu.upf.filter.FileLanguageFilter.filterLanguage;
 
 public class MostRetweetedApp {
-    public static void main(String[] args){
+    public static void main(String[] args) {
         List<String> argsList = Arrays.asList(args);
         String output = argsList.get(0);
-        String input = argsList.get(1);
 
-        //Create a SparkContext to initialize
+        List<String> inputFilesList = Arrays.asList(Arrays.copyOfRange(args, 1, args.length));
+
+        String inputFiles = String.join(",", inputFilesList);
+
+
+        // Create a SparkContext to initialize
         SparkConf conf = new SparkConf().setAppName("Most Retweeted Tweets for Most Retweeted Users");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<String> RDDallLines_spaces = sc.textFile(input);
-        JavaRDD<String> RDDallLines = RDDallLines_spaces.filter(line -> !line.isEmpty());
+        JavaRDD<String> allLinesSpaces = sc.textFile(inputFiles);
+        JavaRDD<String> allLines = allLinesSpaces.filter(line -> !line.isEmpty());
 
         // Read from input
-        JavaRDD<ExtendedSimplifiedTweet> extendedSimplifiedTweets = RDDallLines
+        JavaRDD<ExtendedSimplifiedTweet> extendedSimplifiedTweets = allLines
                 .map(ExtendedSimplifiedTweet::fromJson)
                 .filter(Optional::isPresent)
                 .map(Optional::get);
@@ -41,20 +45,17 @@ public class MostRetweetedApp {
                 .mapToPair(tweet -> new Tuple2<>(tweet.getRetweetedUserId(), 1))
                 .reduceByKey(Integer::sum);
 
-        //Trobem top 10 users based on the previous count
+        // Find top 10 users based on the previous count
         List<Tuple2<Long, Integer>> topUsers = retweetedUserCounts
-                .mapToPair(tuple -> new Tuple2<>(tuple._2(), tuple._1()))       //we swap key and value for sorting, with _2 we are accesing to count and with _1 to id
-                .sortByKey(false)                                               //sort by count in descending order(desc)
-                .mapToPair(tuple -> new Tuple2<>(tuple._2(), tuple._1()))       //swap back to original (id, count)
+                .mapToPair(tuple -> new Tuple2<>(tuple._2(), tuple._1()))
+                .sortByKey(false)
+                .mapToPair(tuple -> new Tuple2<>(tuple._2(), tuple._1()))
                 .take(10);
 
-        // Creem un set del top 10 de users IDs per filtrar desprÃ©s
+        // Create a set of the top 10 user IDs for filtering later
         Set<Long> topUserIds = topUsers.stream().map(Tuple2::_1).collect(Collectors.toSet());
 
-        // Per per cada user del top10 que ha estat RT, fem una llista amb tots
-        // els seus tweets que han estat RT
-        // (UserA, [Tweet1A, Tweet2A, Tweet3A])
-        // (UserB, [Tweet1B, Tweet2B])
+        // For each user in the top 10 who has been retweeted, create a list with all their retweeted tweets
         JavaPairRDD<Long, Iterable<ExtendedSimplifiedTweet>> tweetsGroupedByUser = extendedSimplifiedTweets
                 .filter(ExtendedSimplifiedTweet::isRetweeted)
                 .groupBy(ExtendedSimplifiedTweet::getRetweetedUserId)
@@ -69,7 +70,7 @@ public class MostRetweetedApp {
 
             // Iterate over each tweet for the current user
             for (ExtendedSimplifiedTweet tweet : tweets) {
-                Long tweetId = tweet.getTweetId();
+                Long tweetId = tweet.getRetweetedTweetId();
                 int count = 1; // Initialize count to 1 for the current tweet
                 Tuple2<Long, Long> userTweetPair = new Tuple2<>(userId, tweetId);
                 Tuple2<Tuple2<Long, Long>, Integer> userTweetCount = new Tuple2<>(userTweetPair, count);
@@ -77,23 +78,23 @@ public class MostRetweetedApp {
             }
             return userTweetCountList.iterator();
         });
-        //(userId,tweet), count)
+        // (userId,tweet), count)
 
-        //convert userTweetCounts to a JavaPairRDD with ((userId, tweetId), count)
+        // Convert userTweetCounts to a JavaPairRDD with ((userId, tweetId), count)
         JavaPairRDD<Tuple2<Long, Long>, Integer> userTweetCountsPairRDD = userTweetCounts.mapToPair(tuple -> new Tuple2<>(tuple._1(), tuple._2()));
 
-        //use reduceByKey to sum counts for each (user, tweet) pair
+        // Use reduceByKey to sum counts for each (user, tweet) pair
         JavaPairRDD<Tuple2<Long, Long>, Integer> aggregatedCounts = userTweetCountsPairRDD.reduceByKey(Integer::sum);
 
         JavaPairRDD<Long, Tuple2<Long, Integer>> userTweetMaxCountPairRDD = aggregatedCounts.mapToPair(tuple -> {
             Tuple2<Long, Long> userTweetPair = tuple._1();
             Integer count = tuple._2();
-            return new Tuple2<>(userTweetPair._1(), new Tuple2<>(userTweetPair._2(), count));       //(userId, (tweetId, count))
+            return new Tuple2<>(userTweetPair._1(), new Tuple2<>(userTweetPair._2(), count)); //(userId, (tweetId, count))
         });
 
         JavaPairRDD<Long, Iterable<Tuple2<Long, Integer>>> groupedByUserRDD = userTweetMaxCountPairRDD.groupByKey();
 
-        //for each user id, find the tuple with the maximum count value --> (userId, (maxTweetId, count))
+        // For each user id, find the tuple with the maximum count value --> (userId, (maxTweetId, count))
         JavaPairRDD<Long, Tuple2<Long, Integer>> mostRetweetedTweets = groupedByUserRDD.mapValues(tweetCountIterable -> {
             Tuple2<Long, Integer> maxCountTuple = null;
             int maxCount = -1;
@@ -106,7 +107,7 @@ public class MostRetweetedApp {
             return maxCountTuple;
         });
 
-        //guardem resultat com a fitxer
+        // Save the result as a text file
         mostRetweetedTweets.saveAsTextFile(output);
         System.out.println("Finding most retweeted tweets completed successfully");
     }

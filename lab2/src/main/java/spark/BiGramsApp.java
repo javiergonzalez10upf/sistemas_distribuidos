@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
+import edu.upf.model.SimplifiedTweet;
 import scala.Tuple2;
 
 import java.util.*;
@@ -16,7 +17,7 @@ import static edu.upf.filter.FileLanguageFilter.filterLanguage;
 
 public class BiGramsApp {
     public static void main(String[] args) {
-        if (args.length != 3) {
+        if (args.length < 3) {
             System.err.println("Usage: spark-submit --master <YOUR MASTER> --class spark.BiGramsApp your.jar <language> <output> <inputFile/Folder>");
             System.exit(1);
         }
@@ -35,7 +36,15 @@ public class BiGramsApp {
         JavaRDD<String> RDDallLines_spaces = sc.textFile(inputFiles);
         JavaRDD<String> RDDallLines = RDDallLines_spaces.filter(line -> !line.isEmpty());
 
-        JavaRDD<String> allLines = filterLanguage(RDDallLines, language);
+        //to filter language
+
+        JavaRDD<String> allLines = RDDallLines.filter(line -> {
+            Optional<SimplifiedTweet> optionalTweet = SimplifiedTweet.fromJson(line);
+            return optionalTweet.isPresent() && optionalTweet.get().getLanguage().equalsIgnoreCase(language);
+        });
+
+        //JavaRDD<String> allLines = filterLanguage(RDDallLines, language);
+
 
         JavaRDD<Optional<ExtendedSimplifiedTweet>> parsed_lines = allLines.map(ExtendedSimplifiedTweet::fromJson);
         // Aqí, tenemos una RDD con los textos de los tweets que son del lenguaje deseado, y, que están bien (ispresent)
