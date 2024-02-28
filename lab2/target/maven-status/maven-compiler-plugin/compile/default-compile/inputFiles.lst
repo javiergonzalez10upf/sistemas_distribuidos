@@ -1,0 +1,11 @@
+/home/oscar/lab2/src/main/java/edu/upf/model/Bigram.java
+/home/oscar/lab2/src/main/java/edu/upf/model/ExtendedSimplifiedTweet.java
+/home/oscar/lab2/src/main/java/spark/WordCount.java
+/home/oscar/lab2/src/main/java/edu/upf/model/SimplifiedTweet.java
+/home/oscar/lab2/src/main/java/edu/upf/uploader/S3Uploader.java
+/home/oscar/lab2/src/main/java/spark/BiGramsApp.java
+/home/oscar/lab2/src/main/java/edu/upf/uploader/Uploader.java
+/home/oscar/lab2/src/main/java/edu/upf/TwitterLanguageFilterApp.java
+/home/oscar/lab2/src/main/java/edu/upf/filter/LanguageFilter.java
+/home/oscar/lab2/src/main/java/spark/MostRetweetedApp.java
+/home/oscar/lab2/src/main/java/edu/upf/filter/FileLanguageFilter.java
