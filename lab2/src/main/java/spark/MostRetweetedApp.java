@@ -110,62 +110,6 @@ public class MostRetweetedApp {
         // Save the result as a text file
         mostRetweetedTweets.saveAsTextFile(output);
         System.out.println("Finding most retweeted tweets completed successfully");
+        sc.stop();
     }
-    /*
-    public static void main(String[] args) {
-        if (args.length < 2) {
-            System.err.println("Usage: spark-submit --master <YOUR MASTER> --class spark.MostRetweetedApp your.jar <output> <inputFile/Folder>");
-            System.exit(1);
-        }
-
-        String output = args[0];
-        String input = args[1];
-
-        // Spark application logic here...
-        SparkConf conf = new SparkConf().setAppName("MostRetweetedApp");
-        JavaSparkContext sc = new JavaSparkContext(conf);
-
-        // Read input and create an RDD of ExtendedSimplifiedTweet
-        JavaRDD<String> RDDallLines_spaces = sc.textFile(input);
-        JavaRDD<String> RDDallLines = RDDallLines_spaces.filter(line -> !line.isEmpty());
-
-        JavaRDD<Optional<ExtendedSimplifiedTweet>> parsed_lines = RDDallLines.map(ExtendedSimplifiedTweet::fromJson);
-
-        // Filter out tweets that are not retweets
-        JavaRDD<ExtendedSimplifiedTweet> retweetsRDD = parsed_lines
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(ExtendedSimplifiedTweet::isRetweeted);
-
-        // Identify the most retweeted users
-        JavaPairRDD<Long, Integer> mostRetweetedUsers = retweetsRDD
-                .flatMapToPair(tweet -> {
-                    Long retweetedUserId = tweet.getRetweetedUserId();
-                    return Arrays.asList(new Tuple2<>(retweetedUserId, 1)).iterator();
-                }).reduceByKey(Integer::sum);
-
-        List<Tuple2<Integer, Long>> topUsersRetweeted = mostRetweetedUsers.mapToPair(Tuple2::swap).sortByKey(false).take(10);
-
-        JavaRDD<ExtendedSimplifiedTweet> topTweets = retweetsRDD
-                .filter(tweet -> {
-                    long userId = tweet.getRetweetedUserId();
-                    return topUsersRetweeted.stream().anyMatch(tuple -> tuple._2() == userId);
-                });
-        topTweets.foreach(tweet -> System.out.println("Tweet: " + tweet));
-        sc.stop();
-
-
-        // Extract most retweeted tweets for each user
-        //JavaRDD<ExtendedSimplifiedTweet> mostRetweetedTweets = mostRetweetedUsers
-        //        .flatMap(userIdTweetId -> retweetsRDD
-        //                .filter(tweet -> tweet.getUserId() == userIdTweetId && tweet.getTweetId() == mostRetweetedTweetId)
-        //        );
-
-        // Save the results
-        topTweets.saveAsTextFile(output);
-        topTweets.foreach(tweet -> System.out.println("Tweet: " + tweet));
-        sc.stop();
-
-    }*/
-
 }

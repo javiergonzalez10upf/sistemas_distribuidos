@@ -63,6 +63,6 @@ public class TwitterLanguageFilterApp {
 
         long end = System.currentTimeMillis();
         System.out.println("\nTime spent: " + (end-start));
-
+        sc.stop();
     }
 }
