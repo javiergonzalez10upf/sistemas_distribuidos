@@ -35,7 +35,7 @@ public class TwitterLanguageFilterApp {
         //"path1, path2, path3,..."
 
         // Configuración de Spark
-        SparkConf conf = new SparkConf().setAppName("TwitterLanguageFilterApp").setMaster("local[*]");
+        SparkConf conf = new SparkConf().setAppName("TwitterLanguageFilterApp");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         // Procesamiento de archivos usando Spark
